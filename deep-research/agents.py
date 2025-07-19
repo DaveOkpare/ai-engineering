@@ -32,9 +32,12 @@ def extract_text_content(html_content: str) -> str:
 
 
 @dataclass
-class SubAgentDeps:
-    brave_api_key: str
+class AgentDeps:
     current_date: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+@dataclass
+class SubAgentDeps(AgentDeps):
+    brave_api_key: str = field(default_factory=lambda: os.getenv("BRAVE_API_KEY", "default_key"))
 
 sub_agent = Agent(
     model="openai:gpt-4.1-nano",
