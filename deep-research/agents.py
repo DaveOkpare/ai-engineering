@@ -9,7 +9,7 @@ from pydantic_ai import Agent, RunContext, ModelRetry
 from pydantic_ai.settings import ModelSettings
 import logfire
 
-from prompts.research_subagent import PROMPT
+from prompts import sub_agent_prompt, lead_agent_prompt
 
 # Configure Logfire
 logfire.configure()
@@ -45,8 +45,8 @@ sub_agent = Agent(
 )
 
 @sub_agent.instructions
-def set_instruction(ctx: RunContext[SubAgentDeps]):
-    return PROMPT.replace("{{.CurrentDate}}", ctx.deps.current_date)
+def subagent_instruction(ctx: RunContext[SubAgentDeps]):
+    return sub_agent_prompt.replace("{{.CurrentDate}}", ctx.deps.current_date)
 
 @sub_agent.tool(retries=3)
 async def web_search(
