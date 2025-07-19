@@ -181,5 +181,36 @@ async def web_fetch(
 </fetch_result>"""
 
 
+lead_agent = Agent(
+    model="openai:gpt-4.1-mini",
+    deps_type=AgentDeps,
+    model_settings=ModelSettings(parallel_tool_calls=True),
+    instrument=True,
+    retries=2
+)
+
+@lead_agent.instructions
+def lead_agent_instruction(ctx: RunContext[AgentDeps]):
+    return lead_agent_prompt.replace("{{.CurrentDate}}", ctx.deps.current_date)
+
+
+@lead_agent.tool_plain
+async def run_blocking_subagent(prompt: str):
+    """
+    Deploy a research subagent to perform specific research tasks with web search and fetch capabilities.
+    
+    Args:
+        prompt: Detailed instructions for the subagent's research task including objectives,
+                expected output format, scope boundaries, and suggested sources
+                
+    Returns:
+        str: Research findings and analysis from the subagent
+        
+    Usage: Provide clear, specific instructions. Deploy multiple subagents in parallel for
+            independent research streams. Always deploy at least 1 subagent per query.
+    """
+    result = await sub_agent.run(prompt, deps=SubAgentDeps())
+    return result
+
 if __name__ == "__main__":
-    print(sub_agent.run_sync("Tell me about David Okpare, the AI engineer. Then also tell me about his github projects.", deps=SubAgentDeps(brave_api_key=os.getenv("BRAVE_API_KEY", "default"))).output)
+    print(lead_agent.run_sync("I want to find flights going to Montreal from Lagos between September 10 and September 13. Give me the cheapest between that period.", deps=AgentDeps()).output)
